@@ -1,5 +1,5 @@
 @echo off
->nul 2>&1 net session || (echo Requer admin && pause && exit /b)
+>nul 2>&1 net session || (exit /b)
 
 taskkill /f /im FiveM.exe >nul 2>&1
 taskkill /f /im FiveM_GTAProcess.exe >nul 2>&1
