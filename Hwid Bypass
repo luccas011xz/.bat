@@ -1,0 +1,47 @@
+@echo off
+>nul 2>&1 net session || (echo Requer admin && pause && exit /b)
+
+taskkill /f /im FiveM.exe >nul 2>&1
+taskkill /f /im FiveM_GTAProcess.exe >nul 2>&1
+taskkill /f /im CitizenFX_SubProcess.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
+
+rmdir /s /q "%LOCALAPPDATA%\FiveM" >nul 2>&1
+rmdir /s /q "%USERPROFILE%\AppData\Local\FiveM" >nul 2>&1
+rmdir /s /q "%LOCALAPPDATA%\Chromium\User Data\Default" >nul 2>&1
+
+reg delete "HKEY_CURRENT_USER\Software\FiveM" /f >nul 2>&1
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\FiveM" /f >nul 2>&1
+
+sc stop "Winmgmt" >nul 2>&1
+timeout /t 1 /nobreak >nul
+
+set /a r1=%random% %% 256
+set /a r2=%random% %% 256  
+set /a r3=%random% %% 256
+set /a r4=%random% %% 256
+set /a r5=%random% %% 256
+set /a r6=%random% %% 256
+set NEW_MAC=%r1%-%r2%-%r3%-%r4%-%r5%-%r6%
+
+for /f "tokens=*" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}" /s /k ^| findstr "DriverDesc"') do (
+    set "key=%%i"
+    set "key=!key:DriverDesc=!"
+    reg add "!key!" /v "NetworkAddress" /d "!NEW_MAC!" /f >nul 2>&1
+)
+
+set /a rand_num=%random% %% 10000
+set NEW_NAME=PC-%rand_num%
+wmic computersystem where name="%COMPUTERNAME%" rename "%NEW_NAME%" >nul 2>&1
+
+wmic computersystem set IdentifyingNumber="%random%%random%-%random%-%random%-%random%%random%" >nul 2>&1
+
+winmgmt /resetrepository >nul 2>&1
+ipconfig /flushdns >nul 2>&1
+netsh winsock reset >nul 2>&1
+netsh int ip reset >nul 2>&1
+
+wevtutil el | foreach {wevtutil cl "$_"} >nul 2>&1
+del /f /q %temp%\*.* >nul 2>&1
+rmdir /s /q %temp% >nul 2>&1
+md %temp% >nul 2>&1
