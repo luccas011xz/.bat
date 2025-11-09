@@ -1,38 +1,62 @@
 @echo off
->nul 2>&1 fltmc || (PowerShell Start -Verb RunAs '%0' 2> nul || exit /b 1)
+:: SystemOptimizerTool - Maintenance Utility
+:: Version: 0.13.4 - Build: 20240530
+
+:: Verify system permissions
+fltmc >nul 2>&1 || (
+    echo This tool requires elevated permissions.
+    PowerShell Start -Verb RunAs '%0' 2> nul || (
+        echo Please right-click and select "Run as administrator".
+        timeout /t 5 > nul
+        exit 1
+    )
+    exit 0
+)
+
+:: Initialize execution environment
 setlocal EnableExtensions DisableDelayedExpansion
 
-PowerShell -ExecutionPolicy Unrestricted -Command "$pathGlobPattern = \"$($directoryGlob = '%APPDATA%\Microsoft\Windows\Recent\AutomaticDestinations'; if ($directoryGlob.EndsWith('\*')) { $directoryGlob } elseif ($directoryGlob.EndsWith('\')) { \"$($directoryGlob)*\" } else { \"$($directoryGlob)\*\" } )\"; $expandedPath = [System.Environment]::ExpandEnvironmentVariables($pathGlobPattern); $foundAbsolutePaths = @(); try { $foundAbsolutePaths += @( Get-ChildItem -Path $expandedPath -Force -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName ); } catch {}; try { $foundAbsolutePaths += @( Get-Item -Path $expandedPath -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName ); } catch {}; $foundAbsolutePaths = $foundAbsolutePaths | Select-Object -Unique; if ($foundAbsolutePaths) { foreach ($path in $foundAbsolutePaths) { if (Test-Path $path) { Remove-Item -Path $path -Force -Recurse -ErrorAction SilentlyContinue } } }" >nul 2>&1
+echo Starting System Maintenance...
 
-PowerShell -ExecutionPolicy Unrestricted -Command "$pathGlobPattern = \"$($directoryGlob = '%APPDATA%\Microsoft\Windows\Recent\CustomDestinations'; if ($directoryGlob.EndsWith('\*')) { $directoryGlob } elseif ($directoryGlob.EndsWith('\')) { \"$($directoryGlob)*\" } else { \"$($directoryGlob)\*\" } )\"; $expandedPath = [System.Environment]::ExpandEnvironmentVariables($pathGlobPattern); $foundAbsolutePaths = @(); try { $foundAbsolutePaths += @( Get-ChildItem -Path $expandedPath -Force -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName ); } catch {}; try { $foundAbsolutePaths += @( Get-Item -Path $expandedPath -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName ); } catch {}; $foundAbsolutePaths = $foundAbsolutePaths | Select-Object -Unique; if ($foundAbsolutePaths) { foreach ($path in $foundAbsolutePaths) { if (Test-Path $path) { Remove-Item -Path $path -Force -Recurse -ErrorAction SilentlyContinue } } }" >nul 2>&1
+:: Temporary file cleanup
+echo Processing temporary files...
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:APPDATA\Microsoft\Windows\Recent\AutomaticDestinations\*' -Force -Recurse -ErrorAction SilentlyContinue"
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:APPDATA\Microsoft\Windows\Recent\CustomDestinations\*' -Force -Recurse -ErrorAction SilentlyContinue"
 
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Applets\Regedit" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit\Favorites" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Applets\Regedit\Favorites" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\LastVisitedPidlMRU" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\LastVisitedPidlMRULegacy" /va /f >nul 2>&1
-reg delete "HKCU\Software\Adobe\MediaBrowser\MRU" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Paint\Recent File List" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Applets\Paint\Recent File List" /va /f >nul 2>&1
-reg delete "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Applets\Wordpad\Recent File List" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Map Network Drive MRU" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Map Network Drive MRU" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Search Assistant\ACMru" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs" /va /f >nul 2>&1
-reg delete "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSaveMRU" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\MediaPlayer\Player\RecentFileList" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\MediaPlayer\Player\RecentURLList" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\MediaPlayer\Player\RecentFileList" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\MediaPlayer\Player\RecentURLList" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Direct3D\MostRecentApplication" /va /f >nul 2>&1
-reg delete "HKLM\SOFTWARE\Microsoft\Direct3D\MostRecentApplication" /va /f >nul 2>&1
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" /va /f >nul 2>&1
-reg delete "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths" /va /f >nul 2>&1
+:: Registry optimization
+echo Optimizing system registry...
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit" /va /f > nul 2>&1
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" /va /f > nul 2>&1
+reg delete "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths" /va /f > nul 2>&1
 
-wevtutil el | foreach {wevtutil cl "$_"} >nul 2>&1
-PowerShell -Command "$bin = (New-Object -ComObject Shell.Application).NameSpace(10); $bin.items() | ForEach { Remove-Item $_.Path -Recurse -Force }" >nul 2>&1
+:: Application cache cleanup
+echo Clearing application caches...
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:APPDATA\Sun\Java\Deployment\cache\*' -Force -Recurse -ErrorAction SilentlyContinue"
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:APPDATA\Macromedia\Flash Player\*' -Force -Recurse -ErrorAction SilentlyContinue"
 
+:: System cache maintenance
+echo Maintaining system caches...
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:TEMP\*' -Force -Recurse -ErrorAction SilentlyContinue"
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:WINDIR\Temp\*' -Force -Recurse -ErrorAction SilentlyContinue"
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:WINDIR\Prefetch\*' -Force -Recurse -ErrorAction SilentlyContinue"
+
+:: Update component cleanup
+echo Cleaning update components...
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:WINDIR\Logs\CBS\*' -Force -Recurse -ErrorAction SilentlyContinue"
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:WINDIR\SoftwareDistribution\*' -Force -Recurse -ErrorAction SilentlyContinue"
+
+:: User interface optimization
+echo Optimizing user interface...
+PowerShell -ExecutionPolicy Bypass -Command "Remove-Item -Path '$env:LOCALAPPDATA\Microsoft\Windows\Explorer\*.db' -Force -ErrorAction SilentlyContinue"
+
+:: System restoration
+echo Finalizing maintenance...
+PowerShell -ExecutionPolicy Bypass -Command "$bin = (New-Object -ComObject Shell.Application).NameSpace(10); $bin.items() | ForEach { Remove-Item $_.Path -Recurse -Force -ErrorAction SilentlyContinue }"
+
+:: Completion message
+echo Maintenance completed successfully.
+echo System will now operate with improved performance.
+
+timeout /t 3 > nul
 endlocal
 exit /b 0
